@@ -1,12 +1,12 @@
 # SuiteCRM Docker Image
 
-This image provides a SuiteCRM Server. The image is based on php:apache docker image or php:7.1-fpm with additional nginx service. It depends on a mysql (mariadb) database and can perform a silent install of SuiteCRM.
+This image provides a SuiteCRM Server. The image is based on php:apache docker image. It depends on a mysql (mariadb) database and performs a silent install of SuiteCRM.
 
 # Quickstart
 Run mysql database
 Run suitecrm
 ```bash
-docker pull blacs30/suitecrm
+docker build -t blacs30/suitecrm .
 docker run -d --name mariadb -e MYSQL_USER=dbadmin -e MYSQL_PASSWORD=dbpasswd -e MYSQL_ALLOW_EMPTY_PASSWORD=false -e MYSQL_DATABASE=suitecrm mariadb:10.3
 docker run -d -p 80:80 --link mariadb -e SYSTEM_NAME=MyCRM -e DATABASE_TYPE=mysql -e DATABASE_HOST=mariadb -e DATABASE_NAME=suitecrm -e DB_ADMIN_USERNAME=dbadmin -e DB_ADMIN_PASSWORD=dbpasswd -e SITE_USERNAME=admin -e SITE_PASSWORD=password blacs30/suitecrm
 ```
