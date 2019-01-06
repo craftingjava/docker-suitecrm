@@ -68,6 +68,9 @@ RUN composer install --no-plugins --no-scripts
 COPY php.custom.ini /usr/local/etc/php/conf.d/
 COPY ./bootstrap /bootstrap
 
+# fix known bug https://stackoverflow.com/a/53408865/8707288
+RUN sed -i 's%const  *REGEX_FIELD_PATTERN *= *./\[\^\\w-,\]/.;%const REGEX_FIELD_PATTERN = '\''/[^\\w-,\\s\\]/'\'';%'  Api/V8/Param/Options/Fields.php
+
 # clean temporary files and packages
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
