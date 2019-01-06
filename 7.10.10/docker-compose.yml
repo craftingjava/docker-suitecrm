@@ -15,7 +15,7 @@ services:
     - MYSQL_DATABASE=suitecrmdb
 
   suitecrm:
-    image: blacs30:suitecrm
+    image: blacs30/suitecrm
     container_name: suitecrm.crm
     depends_on:
     - mariadb
