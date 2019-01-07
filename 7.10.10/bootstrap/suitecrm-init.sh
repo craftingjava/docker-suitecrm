@@ -58,6 +58,27 @@ write_suitecrm_config() {
 EOL
 }
 
+write_suitecrm_oauth2_keys() {
+
+  if cd Api/V8/OAuth2 ; then
+    if [[ ! -e private.key ]] ; then 
+      if [[ -e /run/secrets/suitecrm_oauth2_private_key ]] ; then 
+        echo "OAuth2 keys are now docker secrets"
+        ln -Tsf /run/secrets/suitecrm_oauth2_private_key private.key
+        ln -Tsf /run/secrets/suitecrm_oauth2_public_key  public.key
+      else
+        echo "Generating new OAuth2 keys"
+        rm -f  private.key public.key
+        openssl genrsa -out private.key 2048 && \
+        openssl rsa -in private.key -pubout -out public.key
+        chmod 600               private.key public.key
+        chown www-data:www-data private.key public.key
+      fi
+    fi
+    cd -
+  fi
+}
+
 ## Main program ##
 echo "SYSTEM_NAME: ${SYSTEM_NAME}"
 echo "SITE_URL: ${SITE_URL}"
@@ -66,6 +87,8 @@ if [ ! -e ${DOCKER_BOOTSTRAPPED} ]; then
   echo "Configuring suitecrm for first run"
 	write_suitecrm_config
 	cat ${CONFIG_SI_FILE}
+	write_suitecrm_oauth2_keys
+
   until nc ${DATABASE_HOST} 3306; do sleep 3; echo Using DB host: ${DATABASE_HOST}; echo "Waiting for DB to come up..."; done
   echo "DB is available now."
 
