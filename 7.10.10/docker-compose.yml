@@ -16,6 +16,7 @@ services:
 
   suitecrm:
     image: blacs30/suitecrm
+    build: .
     container_name: suitecrm.crm
     depends_on:
     - mariadb
