@@ -1,0 +1,44 @@
+version: '3'
+
+services:
+  mariadb:
+    image: 'mariadb:10.3'
+    container_name: mysql.crm
+    ports:
+    - 3306:3306
+    volumes:
+    - db-volume:/var/lib/mysql:Z
+    environment:
+    - MYSQL_USER=admin
+    - MYSQL_PASSWORD=secret
+    - MYSQL_ROOT_PASSWORD=secret
+    - MYSQL_DATABASE=suitecrmdb
+
+  suitecrm:
+    image: blacs30/suitecrm
+    build: .
+    container_name: suitecrm.crm
+    depends_on:
+    - mariadb
+    ports:
+    - 80:80
+    tty: true
+    environment:
+    - CURRENCY_ISO4217=MXN
+    - CURRENCY_NAME=MX Peso
+    - DATE_FORMAT=d-m-Y
+    - EXPORT_CHARSET=ISO-8859-1
+    - DEFAULT_LANGUAGE=en_us
+    - DATABASE_TYPE=mysql
+    - DATABASE_HOST=mariadb
+    - DB_ADMIN_PASSWORD=secret
+    - DB_ADMIN_USERNAME=admin
+    - DATABASE_NAME=suitecrmdb
+    - SITE_USERNAME=admin
+    - SITE_PASSWORD=password
+    - SITE_URL=http://localhost
+    - SYSTEM_NAME=Zentek CRM
+
+volumes:
+    db-volume:
+
