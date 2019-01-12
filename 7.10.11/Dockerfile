@@ -25,7 +25,7 @@ RUN apt-get update \
 
 # Busybox installation
 RUN busybox --install
-
+RUN a2enmod rewrite
 # Docker image configuration
 RUN docker-php-ext-configure gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/ \
     && docker-php-ext-configure imap --with-kerberos --with-imap-ssl \
@@ -49,6 +49,7 @@ RUN docker-php-ext-configure gd --with-freetype-dir=/usr/include/ --with-jpeg-di
 WORKDIR /var/www/html
 
 #Setting UP SuiteCRM
+
 RUN curl https://codeload.github.com/salesagility/SuiteCRM/tar.gz/${SCRM_VERSION} | tar xzv --strip 1
 
 #Setting Up config file redirect for proper use with docker volumes
