@@ -36,7 +36,7 @@ services:
     - MYSQL_DATABASE=suitecrmdb
 
   suitecrm:
-    image: craftingjava/suitecrm:latest
+    image: craftingjava/suitecrm:7.8.24
     container_name: suitecrm.crm
     depends_on:
     - mariadb
