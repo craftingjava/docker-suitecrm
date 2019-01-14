@@ -6,9 +6,9 @@ This image provides a SuiteCRM Server. The image is based on php:apache docker i
 Run mysql database
 Run suitecrm
 ```bash
-docker build -t blacs30/suitecrm .
+docker build -t craftingjava/suitecrm .
 docker run -d --name mariadb -e MYSQL_USER=dbadmin -e MYSQL_PASSWORD=dbpasswd -e MYSQL_ALLOW_EMPTY_PASSWORD=false -e MYSQL_DATABASE=suitecrm mariadb:10.3
-docker run -d -p 80:80 --link mariadb -e SYSTEM_NAME=MyCRM -e DATABASE_TYPE=mysql -e DATABASE_HOST=mariadb -e DATABASE_NAME=suitecrm -e DB_ADMIN_USERNAME=dbadmin -e DB_ADMIN_PASSWORD=dbpasswd -e SITE_USERNAME=admin -e SITE_PASSWORD=password blacs30/suitecrm
+docker run -d -p 80:80 --link mariadb -e SYSTEM_NAME=MyCRM -e DATABASE_TYPE=mysql -e DATABASE_HOST=mariadb -e DATABASE_NAME=suitecrm -e DB_ADMIN_USERNAME=dbadmin -e DB_ADMIN_PASSWORD=dbpasswd -e SITE_USERNAME=admin -e SITE_PASSWORD=password craftingjava/suitecrm
 ```
 
 # Features
@@ -36,7 +36,7 @@ services:
     - MYSQL_DATABASE=suitecrmdb
 
   suitecrm:
-    image: blacs30/suitecrm:7.10.4
+    image: craftingjava/suitecrm:latest
     container_name: suitecrm.crm
     depends_on:
     - mariadb
