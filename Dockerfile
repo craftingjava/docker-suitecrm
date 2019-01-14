@@ -78,9 +78,6 @@ RUN composer install --no-plugins --no-scripts
 COPY php.custom.ini /usr/local/etc/php/conf.d/
 COPY ./bootstrap /bootstrap
 
-# fix known bug https://stackoverflow.com/a/53408865/8707288
-RUN sed -i 's%const  *REGEX_FIELD_PATTERN *= *./\[\^\\w-,\]/.;%const REGEX_FIELD_PATTERN = '\''/[^\\w-,\\s\\]/'\'';%'  Api/V8/Param/Options/Fields.php
-
 USER root
 
 # clean temporary files and packages
@@ -94,4 +91,3 @@ CMD ["/bootstrap/suitecrm-init.sh"]
 
 # End of file
 # vim: set ts=2 sw=2 noet:
-
