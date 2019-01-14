@@ -15,7 +15,7 @@ services:
     - MYSQL_DATABASE=suitecrmdb
 
   suitecrm:
-    image: craftingjava/suitecrm:latest
+    image: craftingjava/suitecrm:7.10.11
     build: .
     container_name: suitecrm.crm
     depends_on:
