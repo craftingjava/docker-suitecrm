@@ -56,6 +56,7 @@ write_suitecrm_config() {
     'setup_system_name' => '${SYSTEM_NAME}',
   );
 EOL
+  chown www-data:www-data ${CONFIG_SI_FILE}
 }
 
 write_suitecrm_oauth2_keys() {
@@ -85,9 +86,9 @@ echo "SITE_URL: ${SITE_URL}"
 
 if [ ! -e ${DOCKER_BOOTSTRAPPED} ]; then
   echo "Configuring suitecrm for first run"
-	write_suitecrm_config
-	cat ${CONFIG_SI_FILE}
-	write_suitecrm_oauth2_keys
+  write_suitecrm_config
+  cat ${CONFIG_SI_FILE}
+  write_suitecrm_oauth2_keys
 
   until nc ${DATABASE_HOST} 3306; do sleep 3; echo Using DB host: ${DATABASE_HOST}; echo "Waiting for DB to come up..."; done
   echo "DB is available now."
@@ -96,18 +97,25 @@ if [ ! -e ${DOCKER_BOOTSTRAPPED} ]; then
   echo "##Running silent install, will take a couple of minutes, so go and take a tea...##"
   echo "##################################################################################"
 
-	php -r "\$_SERVER['HTTP_HOST'] = 'localhost'; \$_SERVER['REQUEST_URI'] = 'install.php';\$_REQUEST = array('goto' => 'SilentInstall', 'cli' => true);require_once 'install.php';";
-	chown -R www-data:www-data . && chmod -R 755 . && chmod -R 775 cache custom modules themes data upload
+  su www-data -s /bin/sh -c php <<'__END_OF_INSTALL_PHP__'
+    <? 
+      $_SERVER['HTTP_HOST'] = 'localhost'; 
+      $_SERVER['REQUEST_URI'] = 'install.php';
+      $_SERVER['SERVER_SOFTWARE'] = 'Apache'; 
+      $_REQUEST = array('goto' => 'SilentInstall', 'cli' => true);
+      require_once 'install.php';
+    ?>
+__END_OF_INSTALL_PHP__
 
   echo "##################################################################################"
   echo "##SuiteCRM is ready to use, enjoy it##############################################"
   echo "##################################################################################"
 
   touch ${DOCKER_BOOTSTRAPPED}
-	apache2-foreground
+  apache2-foreground
 else
   echo "Ready to use suitecrm..."
-	apache2-foreground
+  apache2-foreground
 fi
 # End of file
 # vim: set ts=2 sw=2 noet:

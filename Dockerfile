@@ -30,9 +30,10 @@ RUN a2enmod rewrite
 RUN docker-php-ext-configure gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/ \
     && docker-php-ext-configure imap --with-kerberos --with-imap-ssl \
     && docker-php-ext-configure ldap --with-libdir=lib/x86_64-linux-gnu/ \
-    && docker-php-ext-install -j$(nproc) iconv \
-		    mcrypt \
-				pdo_mysql \
+    && docker-php-ext-install -j$(nproc) \
+        iconv \
+        mcrypt \
+        pdo_mysql \
         curl \
         mbstring \
         mysqli \
@@ -46,23 +47,31 @@ RUN docker-php-ext-configure gd --with-freetype-dir=/usr/include/ --with-jpeg-di
         imap \
         ldap
 
-WORKDIR /var/www/html
+# Setting up composer
+RUN php -r "copy('https://getcomposer.org/installer', '/tmp/composer-setup.php');"
+RUN php /tmp/composer-setup.php --install-dir=/usr/local/bin --filename=composer
 
-#Setting UP SuiteCRM
+# Setting up SuiteCRM
+WORKDIR /var/www/html
+USER www-data
 
 RUN curl https://codeload.github.com/salesagility/SuiteCRM/tar.gz/${SCRM_VERSION} | tar xzv --strip 1
 
-#Setting Up config file redirect for proper use with docker volumes
+# The `tar x` as www-data and without `--preserve-permissions` does these implicitly:
+# chown www-data && chmod 755 (docker has default umask 022)
+# SuiteCRM manual says selected directories need wider permissions:
+RUN chmod -R 775 custom modules themes data upload
+
+# Setting up config file redirect for proper use with docker volumes
 RUN mkdir conf.d \
     && touch conf.d/config.php conf.d/config_override.php \
     && ln -s conf.d/config.php \
     && ln -s conf.d/config_override.php
 
+# Install SuiteCRM scheduler
 RUN (crontab -l 2>/dev/null; echo "* * * * *  php -f /var/www/html/cron.php > /dev/null 2>&1 ") | crontab -
 
-# composer
-RUN php -r "copy('https://getcomposer.org/installer', '/tmp/composer-setup.php');"
-RUN php /tmp/composer-setup.php --install-dir=/usr/local/bin --filename=composer
+# Download our php dependencies using composer (composer.json)
 RUN composer install --no-plugins --no-scripts
 
 # bootstrap files
@@ -71,6 +80,8 @@ COPY ./bootstrap /bootstrap
 
 # fix known bug https://stackoverflow.com/a/53408865/8707288
 RUN sed -i 's%const  *REGEX_FIELD_PATTERN *= *./\[\^\\w-,\]/.;%const REGEX_FIELD_PATTERN = '\''/[^\\w-,\\s\\]/'\'';%'  Api/V8/Param/Options/Fields.php
+
+USER root
 
 # clean temporary files and packages
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
