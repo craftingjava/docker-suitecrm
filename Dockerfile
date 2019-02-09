@@ -63,10 +63,7 @@ RUN curl https://codeload.github.com/salesagility/SuiteCRM/tar.gz/${SCRM_VERSION
 RUN chmod -R 775 custom modules themes data upload
 
 # Setting up config file redirect for proper use with docker volumes
-RUN mkdir conf.d \
-    && touch conf.d/config.php conf.d/config_override.php \
-    && ln -s conf.d/config.php \
-    && ln -s conf.d/config_override.php
+RUN mkdir -p /var/www/html/conf.d
 
 # Install SuiteCRM scheduler
 RUN (crontab -l 2>/dev/null; echo "* * * * *  php -f /var/www/html/cron.php > /dev/null 2>&1 ") | crontab -

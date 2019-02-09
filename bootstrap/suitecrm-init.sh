@@ -97,6 +97,13 @@ if [ ! -e ${DOCKER_BOOTSTRAPPED} ]; then
   echo "##Running silent install, will take a couple of minutes, so go and take a tea...##"
   echo "##################################################################################"
 
+  touch /var/www/html/conf.d/config.php /var/www/html/conf.d/config_override.php
+  ln -sf /var/www/html/conf.d/config.php /var/www/html/config.php
+  ln -sf /var/www/html/conf.d/config_override.php /var/www/html/config_override.php
+
+  chown www-data:www-data -R /var/www/html/conf.d
+  chown www-data:www-data /var/www/html/config*.php
+
   su www-data -s /bin/sh -c php <<'__END_OF_INSTALL_PHP__'
     <? 
       $_SERVER['HTTP_HOST'] = 'localhost'; 
