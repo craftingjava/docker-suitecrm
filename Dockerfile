@@ -1,7 +1,7 @@
 FROM php:7.1-apache
 MAINTAINER Marco A Rojas <marco.rojas@zentek.com.mx>
 
-ENV SCRM_VERSION v7.10.11
+ENV SCRM_VERSION v7.10.13
 
 # Install requirements
 RUN apt-get update \
