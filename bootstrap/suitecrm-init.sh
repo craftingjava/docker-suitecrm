@@ -59,7 +59,9 @@ write_suitecrm_config() {
 EOL
   chown www-data:www-data ${CONFIG_SI_FILE}
 
+  echo "---[ start ${CONFIG_SI_FILE} ]---"
   cat ${CONFIG_SI_FILE}
+  echo "---[ end ${CONFIG_SI_FILE} ]---"
 }
 
 write_suitecrm_oauth2_keys() {
@@ -102,19 +104,35 @@ write_suitecrm_oauth2_keys
 # Waiting for DB to come up
 check_mysql
 
-# Run slient install only if config files don't exist
+# Folder conf.d might be a mounted volume containing existing configuration files
+# Let's (re)link the config files which might be there or create empty ones
 if [ ! -f ${CONFIG_FILE} -o ! -f ${CONFIG_OVERRIDE_FILE} ]; then
-  echo "Configuring suitecrm for first run..."
+  echo "Configuration files have not been found, let's check conf.d..."
+
+  touch ${SUITECRM_HOME}/conf.d/config.php 
+  ln -sf ${SUITECRM_HOME}/conf.d/config.php ${CONFIG_FILE}
+
+  echo "---[ start ${CONFIG_FILE} ]---"
+  cat ${CONFIG_FILE}
+  echo "---[ end ${CONFIG_FILE} ]---"
+
+  touch ${SUITECRM_HOME}/conf.d/config_override.php
+  ln -sf ${SUITECRM_HOME}/conf.d/config_override.php ${CONFIG_OVERRIDE_FILE}
+
+  echo "---[ start ${CONFIG_OVERRIDE_FILE} ]---"
+  cat ${CONFIG_OVERRIDE_FILE}
+  echo "---[ end ${CONFIG_OVERRIDE_FILE} ]---"
+fi
+
+# Run slient install only if config files are actually empty
+if [ $(cat ${CONFIG_FILE} | wc -l) -eq 0 -o $(cat ${CONFIG_OVERRIDE_FILE} | wc -l) -eq 0 ]; then
+  echo "Configuring SuiteCRM for first run..."
 
   write_suitecrm_config
 
   echo "##################################################################################"
   echo "##Running silent install, will take a couple of minutes, so go and take a tea...##"
   echo "##################################################################################"
-
-  touch ${SUITECRM_HOME}/conf.d/config.php ${SUITECRM_HOME}/conf.d/config_override.php
-  ln -sf ${SUITECRM_HOME}/conf.d/config.php ${CONFIG_FILE}
-  ln -sf ${SUITECRM_HOME}/conf.d/config_override.php ${CONFIG_OVERRIDE_FILE}
 
   chown www-data:www-data -R ${SUITECRM_HOME}/conf.d
   chown www-data:www-data ${SUITECRM_HOME}/config*.php
