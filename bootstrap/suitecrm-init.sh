@@ -1,9 +1,10 @@
 #!/bin/bash
 set -eu
 
-readonly DOCKER_BOOTSTRAPPED="/bootstrap/docker_bootstrapped"
-readonly WAIT_FOR="/bootstrap/wait-for-it"
-readonly CONFIG_SI_FILE="/var/www/html/config_si.php"
+readonly SUITECRM_HOME="/var/www/html"
+readonly CONFIG_SI_FILE="${SUITECRM_HOME}/config_si.php"
+readonly CONFIG_FILE="${SUITECRM_HOME}/config.php"
+readonly CONFIG_OVERRIDE_FILE="${SUITECRM_HOME}/config_override.php"
 
 CURRENCY_ISO4217="${CURRENCY_ISO4217:-USD}"
 CURRENCY_NAME="${CURRENCY_NAME:-US Dollar}"
@@ -57,10 +58,11 @@ write_suitecrm_config() {
   );
 EOL
   chown www-data:www-data ${CONFIG_SI_FILE}
+
+  cat ${CONFIG_SI_FILE}
 }
 
 write_suitecrm_oauth2_keys() {
-
   if cd Api/V8/OAuth2 ; then
     if [[ ! -e private.key ]] ; then 
       if [[ -e /run/secrets/suitecrm_oauth2_private_key ]] ; then 
@@ -80,29 +82,42 @@ write_suitecrm_oauth2_keys() {
   fi
 }
 
+check_mysql() {
+  until nc -w1 ${DATABASE_HOST} 3306; do
+    sleep 3
+    echo Using DB host: ${DATABASE_HOST}
+    echo "Waiting for MySQL to come up..."
+  done
+
+  echo "MySQL is available now."
+}
+
 ## Main program ##
 echo "SYSTEM_NAME: ${SYSTEM_NAME}"
 echo "SITE_URL: ${SITE_URL}"
 
-if [ ! -e ${DOCKER_BOOTSTRAPPED} ]; then
-  echo "Configuring suitecrm for first run"
-  write_suitecrm_config
-  cat ${CONFIG_SI_FILE}
-  write_suitecrm_oauth2_keys
+# Generate OAuth keys
+write_suitecrm_oauth2_keys
 
-  until nc ${DATABASE_HOST} 3306; do sleep 3; echo Using DB host: ${DATABASE_HOST}; echo "Waiting for DB to come up..."; done
-  echo "DB is available now."
+# Waiting for DB to come up
+check_mysql
+
+# Run slient install only if config files don't exist
+if [ ! -s ${CONFIG_FILE} || ! -s ${CONFIG_OVERRIDE_FILE} ]; then
+  echo "Configuring suitecrm for first run..."
+
+  write_suitecrm_config
 
   echo "##################################################################################"
   echo "##Running silent install, will take a couple of minutes, so go and take a tea...##"
   echo "##################################################################################"
 
-  touch /var/www/html/conf.d/config.php /var/www/html/conf.d/config_override.php
-  ln -sf /var/www/html/conf.d/config.php /var/www/html/config.php
-  ln -sf /var/www/html/conf.d/config_override.php /var/www/html/config_override.php
+  touch ${SUITECRM_HOME}/conf.d/config.php ${SUITECRM_HOME}/conf.d/config_override.php
+  ln -sf ${SUITECRM_HOME}/conf.d/config.php ${CONFIG_FILE}
+  ln -sf ${SUITECRM_HOME}/conf.d/config_override.php ${CONFIG_OVERRIDE_FILE}
 
-  chown www-data:www-data -R /var/www/html/conf.d
-  chown www-data:www-data /var/www/html/config*.php
+  chown www-data:www-data -R ${SUITECRM_HOME}/conf.d
+  chown www-data:www-data ${SUITECRM_HOME}/config*.php
 
   su www-data -s /bin/sh -c php <<'__END_OF_INSTALL_PHP__'
     <? 
@@ -114,15 +129,14 @@ if [ ! -e ${DOCKER_BOOTSTRAPPED} ]; then
     ?>
 __END_OF_INSTALL_PHP__
 
-  echo "##################################################################################"
-  echo "##SuiteCRM is ready to use, enjoy it##############################################"
-  echo "##################################################################################"
-
-  touch ${DOCKER_BOOTSTRAPPED}
-  apache2-foreground
+  echo "Silent install completed."
 else
-  echo "Ready to use suitecrm..."
-  apache2-foreground
-fi
+
+echo "##################################################################################"
+echo "##SuiteCRM is ready to use, enjoy it##############################################"
+echo "##################################################################################"
+
+apache2-foreground
+
 # End of file
 # vim: set ts=2 sw=2 noet:
