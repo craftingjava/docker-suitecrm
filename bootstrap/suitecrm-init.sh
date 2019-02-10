@@ -103,7 +103,7 @@ write_suitecrm_oauth2_keys
 check_mysql
 
 # Run slient install only if config files don't exist
-if [ ! -s ${CONFIG_FILE} || ! -s ${CONFIG_OVERRIDE_FILE} ]; then
+if [ ! -f ${CONFIG_FILE} -o ! -f ${CONFIG_OVERRIDE_FILE} ]; then
   echo "Configuring suitecrm for first run..."
 
   write_suitecrm_config
