@@ -130,7 +130,7 @@ if [ ! -s ${CONFIG_FILE} || ! -s ${CONFIG_OVERRIDE_FILE} ]; then
 __END_OF_INSTALL_PHP__
 
   echo "Silent install completed."
-else
+fi
 
 echo "##################################################################################"
 echo "##SuiteCRM is ready to use, enjoy it##############################################"
